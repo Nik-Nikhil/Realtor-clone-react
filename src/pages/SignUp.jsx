@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import { Link } from "react-router-dom";
+import { Link ,useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
-
-
-
+import {getAuth,createUserWithEmailAndPassword,updateProfile} from "firebase/auth"
+import { db } from "../firebase";
+import { doc,serverTimestamp,setDoc } from "firebase/firestore";
+import { toast } from "react-toastify";
 const SignUp = () => {
   const [showPassword, setShowPassword] =useState(false)
   const [formData ,setFormData] = useState({
@@ -14,6 +15,7 @@ const SignUp = () => {
   })
 
   const {name,email,password} = formData
+  const navigate = useNavigate()
   
 
   function onChange(e){
@@ -22,6 +24,29 @@ const SignUp = () => {
       [e.target.id]: e.target.value,
 
     }))
+  }
+
+  async function onSubmit(e){
+    e.preventDefault()
+    try {
+      const auth =getAuth() 
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password) 
+      updateProfile(auth.currentUser, {
+        displayName: name,
+      })
+      const user = userCredential.user 
+      const formDataCopy = {...formData}
+      delete formDataCopy.password
+      formDataCopy.timestamp =serverTimestamp()
+
+      await setDoc(doc(db, "users", user.uid), formDataCopy)
+      toast.success("Registration successful")
+      navigate('/')
+    } catch (error) {
+      toast.error("Something went wrong with the registration")
+
+      
+    }
   }
 
 
@@ -33,7 +58,7 @@ const SignUp = () => {
         <img src="https://images.unsplash.com/flagged/photo-1564767609342-620cb19b2357?w=1000&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8a2V5c3xlbnwwfHwwfHx8MA%3D%3D" alt="key" className='w-full rounded-2xl'/>
       </div>
       <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-        <form>
+        <form onSubmit={onSubmit}>
           <div>
           <input  type='text' id='name' value={name} onChange={onChange} placeholder="Your Name" className= "mb-6 w-full px-4 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out"/>
 
