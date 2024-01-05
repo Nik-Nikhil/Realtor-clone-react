@@ -43,8 +43,7 @@ const SignUp = () => {
       toast.success("Registration successful")
       navigate('/')
     } catch (error) {
-      toast.error("Something went wrong with the registration")
-
+      toast.error("Somewthing went wrong")
       
     }
   }
